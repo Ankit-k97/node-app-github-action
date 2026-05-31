@@ -30,8 +30,15 @@ jobs:
           # Run the services in the background (detached mode)
           docker compose up -d
 
-          # Give Node.js a couple of seconds to boot up
-          sleep 5
+          # Wait for the service to be healthy with retries
+          for i in {1..30}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "Application is ready!"
+              break
+            fi
+            echo "Waiting for application to start... ($i/30)"
+            sleep 1
+          done
 
           # Test if the application responds (adjust URL/port if needed)
           curl http://localhost:3000
