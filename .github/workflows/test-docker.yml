@@ -27,18 +27,28 @@ jobs:
       # 5. Spin up the container to verify it runs properly
       - name: Run and Test Container
         run: |
+          set -e
+
           # Run the services in the background (detached mode)
           docker compose up -d
 
           # Wait for the service to be healthy with retries
-          for i in {1..30}; do
+          for i in {1..60}; do
             if curl -f http://localhost:3000 > /dev/null 2>&1; then
               echo "Application is ready!"
               break
             fi
-            echo "Waiting for application to start... ($i/30)"
-            sleep 1
+            echo "Waiting for application to start... ($i/60)"
+            sleep 2
           done
+
+          # Verify the application started successfully
+          if ! curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "Application did not start within the expected time."
+            docker compose logs app --tail 50
+            docker compose down
+            exit 1
+          fi
 
           # Test if the application responds (adjust URL/port if needed)
           curl http://localhost:3000
