@@ -1,0 +1,42 @@
+# @format
+
+name: Test Node.js Docker Image
+
+# 1. Trigger the workflow on every push to the main branch
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    # 2. Use GitHub's free Ubuntu virtual machine
+    runs-on: ubuntu-latest
+
+    steps:
+      # 3. Pull your source code into the virtual machine
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 4. Build the Docker image from your local Dockerfile
+      - name: Build Docker Image
+        run: |
+          docker compose build
+
+      # 5. Spin up the container to verify it runs properly
+      - name: Run and Test Container
+        run: |
+          # Run the services in the background (detached mode)
+          docker compose up -d
+
+          # Give Node.js a couple of seconds to boot up
+          sleep 5
+
+          # Test if the application responds (adjust URL/port if needed)
+          curl http://localhost:3000
+          curl http://localhost:3000/api/users
+          curl http://localhost:3000/api/products
+
+          # Clean up the services
+          docker compose down
